@@ -104,9 +104,9 @@ local function job_run(args, args_default, bang, buffer, buffer_name, file, forc
     return buffer, id
   end
   if (current_wd ~= nil) and (not job_check_file(current_wd .."/".. file, kind)) then
-    return nil, nil
+    return buffer, id
   elseif (current_wd == nil) and (not job_check_file(file, kind)) then
-    return nil, nil
+    return buffer, id
   end
   -- Format interpreter string
   local interpreter = ''
