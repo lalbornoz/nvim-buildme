@@ -15,12 +15,13 @@ local M = {}
 
 -------------------- OPTIONS -------------------------------
 local options = {
-  buildfile = '.buildme.sh',  -- the build file to execute
-  runfile = '.runme.sh',      -- the run file to execute
-  interpreter = 'bash',       -- the interpreter to use (bash, python, ...)
-  force = '--force',          -- the option to pass when the bang is used
-  save_current_wd = false,    -- save working directory of editor at startup; used to look for {build,run}file
-  wincmd = '',                -- a window command to run prior to a build job
+  buildfile = '.buildme.sh',    -- the build file to execute
+  runfile = '.runme.sh',        -- the run file to execute
+  edit_on_nonexistent = true,   -- edit non-existent build/run file on build/run
+  interpreter = 'bash',         -- the interpreter to use (bash, python, ...)
+  force = '--force',            -- the option to pass when the bang is used
+  save_current_wd = false,      -- save working directory of editor at startup; used to look for {build,run}file
+  wincmd = '',                  -- a window command to run prior to a build job
 }
 
 -------------------- PRIVATE -------------------------------
@@ -95,7 +96,9 @@ end
 local function job_check_file(file, kind)
   if fn.filereadable(file) == 0 then
     echo('WarningMsg', fmt("%s file '%s' not found", kind:gsub("^%l", string.upper), file))
-    edit(file)
+    if options.edit_on_nonexistent then
+      edit(file)
+    end
     return false
   else
     return true

@@ -72,12 +72,13 @@ You can pass options to the provided `setup()` function. Here are all available
 options with their default settings:
 ```lua
 require('buildme').setup {
-  buildfile = '.buildme.sh',  -- the build file to execute
-  runfile = '.runme.sh',      -- the run file to execute
-  interpreter = 'bash',       -- the interpreter to use (bash, python, ...)
-  force = '--force',          -- the option to pass when the bang is used
-  save_current_wd = false,    -- save working directory of editor at startup; used to look for {build,run}file
-  wincmd = '',                -- a command to run prior to a build job (split, vsplit, ...)
+  buildfile = '.buildme.sh',    -- the build file to execute
+  runfile = '.runme.sh',        -- the run file to execute
+  edit_on_nonexistent = true,   -- edit non-existent build/run file on build/run
+  interpreter = 'bash',         -- the interpreter to use (bash, python, ...)
+  force = '--force',            -- the option to pass when the bang is used
+  save_current_wd = false,      -- save working directory of editor at startup; used to look for {build,run}file
+  wincmd = '',                  -- a command to run prior to a build job (split, vsplit, ...)
 }
 ```
 
