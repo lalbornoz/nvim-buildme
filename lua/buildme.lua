@@ -157,6 +157,21 @@ function M.editargsrun()
   args_default_run = editargs(args_default_run, "RunMe")
 end
 
+function M.editcwd(kind)
+  vim.ui.input({
+    default=current_wd or "",
+    prompt=fmt('{Build,Run}Me working directory: '),
+    }, function(input)
+      if input == nil then
+        current_wd = current_wd
+      elseif #input == 0 then
+        current_wd = nil
+      else
+        current_wd = input
+      end
+    end)
+end
+
 function M.jumpbuild()
   jump(job_buffer_build, 'buildme')
 end

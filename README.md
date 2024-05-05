@@ -27,12 +27,20 @@ To run a build/run job:
 ```vim
 :BuildMe
 :RunMe
+
 " Arguments may be optionally supplied:
 :BuildMe -j4 putty
 :RunMe --file @session
+
 " In the absence of arguments, default arguments, if any, will be used. These may be edited:
 :BuildMeEditArgs
 :RunMeEditArgs
+
+" An optional working directory specific to both of {Build,Run}Me may be set and edited; if
+" the save_current_wd option below is configured as true, it will be set to the initial working
+" directory of the editor at startup. The two commands are aliases of each other for convenience.
+:BuildMeEditCwd
+:RunMeEditCwd
 ```
 Use `:BuildMe!` to pass the `force` option (by default `--force`,
 [configurable](#configuration)) to the final command.
