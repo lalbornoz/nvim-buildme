@@ -114,7 +114,7 @@ end
 function M.setup(user_options)
   options = vim.tbl_extend('keep', user_options, options)
   if user_options then
-    M.options = vim.tbl_extend('force', M.options, user_options)
+    options = vim.tbl_extend('force', options, user_options)
   end
 end
 
