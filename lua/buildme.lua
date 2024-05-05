@@ -131,7 +131,7 @@ local function job_run(args, args_default, bang, buffer, buffer_name, file, forc
   api.nvim_buf_set_option(buffer, 'filetype', 'buildme')
   api.nvim_buf_set_option(buffer, 'modified', false)
   -- Start build job
-  local command = fmt("%s%s%s%s", interpreter, file, force, args)
+  local command = fmt("%s%s%s%s", interpreter, fn.shellescape(file), force, args)
   id = fn.termopen(command, {cwd = current_wd, on_exit = job_exit})
   -- Rename buffer
   api.nvim_buf_set_name(buffer, buffer_name)
