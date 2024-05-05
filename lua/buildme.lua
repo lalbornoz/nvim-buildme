@@ -74,7 +74,7 @@ local function stop(id)
   echo('None', 'No job to stop')
 end
 
-local function job_run(bang, buffer, buffer_name, file, force, id, kind)
+local function job_run(args, bang, buffer, buffer_name, file, force, id, kind)
   if job_running(id) then
     echo('ErrorMsg', fmt('A %s job is already running (id: %d)', kind, id))
     return buffer, id
@@ -92,6 +92,9 @@ local function job_run(bang, buffer, buffer_name, file, force, id, kind)
   if bang and force ~= '' then
     force = fmt(' %s', force)
   end
+  if args ~= '' then
+    args = fmt(' %s', args)
+  end
   -- Create scratch buffer
   if not buffer_exists(buffer) then
     buffer = api.nvim_create_buf(true, true)
@@ -102,7 +105,7 @@ local function job_run(bang, buffer, buffer_name, file, force, id, kind)
   api.nvim_buf_set_option(buffer, 'filetype', 'buildme')
   api.nvim_buf_set_option(buffer, 'modified', false)
   -- Start build job
-  local command = fmt('%s%s%s', interpreter, file, force)
+  local command = fmt('%s%s%s%s', interpreter, file, force, args)
   id = fn.termopen(command, {on_exit = job_exit})
   -- Rename buffer
   api.nvim_buf_set_name(buffer, buffer_name)
@@ -128,12 +131,16 @@ function M.jumprun()
   jump(job_buffer_run, 'runme')
 end
 
-function M.build(bang)
-  job_buffer_build, job_id_build = job_run(bang, job_buffer_build, 'buildme://buildjob', options.buildfile, options.force, job_id_build, 'build')
+function M.build(bang, args)
+  job_buffer_build, job_id_build = job_run(
+    args, bang, job_buffer_build, 'buildme://buildjob',
+    options.buildfile, options.force, job_id_build, 'build')
 end
 
-function M.run(bang)
-  job_buffer_run, job_id_run = job_run(bang, job_buffer_run, 'buildme://runjob', options.runfile, "", job_id_run, 'run')
+function M.run(bang, args)
+  job_buffer_run, job_id_run = job_run(
+    args, bang, job_buffer_run, 'buildme://runjob',
+    options.runfile, "", job_id_run, 'run')
 end
 
 function M.stopbuild()

@@ -6,8 +6,8 @@ if exists('g:loaded_buildme')
   finish
 endif
 
-command! -bang BuildMe lua require('buildme').build('<bang>' == '!')
-command! RunMe lua require('buildme').run('')
+command! -nargs=* -bang BuildMe lua require('buildme').build('<bang>' == '!', '<args>')
+command! -nargs=* RunMe lua require('buildme').run('', '<args>')
 command! BuildMeEdit lua require('buildme').editbuild()
 command! RunMeEdit lua require('buildme').editrun()
 command! BuildMeJump lua require('buildme').jumpbuild()

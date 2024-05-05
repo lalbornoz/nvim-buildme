@@ -27,6 +27,9 @@ To run a build/run job:
 ```vim
 :BuildMe
 :RunMe
+" Arguments may be optionally supplied:
+:BuildMe -j4 putty
+:RunMe --file @session
 ```
 Use `:BuildMe!` to pass the `force` option (by default `--force`,
 [configurable](#configuration)) to the final command.
