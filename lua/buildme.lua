@@ -10,6 +10,7 @@ local job_buffer_build, job_id_build
 local job_buffer_run, job_id_run
 local args_default_build
 local args_default_run
+local current_wd
 local M = {}
 
 -------------------- OPTIONS -------------------------------
@@ -18,6 +19,7 @@ local options = {
   runfile = '.runme.sh',      -- the run file to execute
   interpreter = 'bash',       -- the interpreter to use (bash, python, ...)
   force = '--force',          -- the option to pass when the bang is used
+  save_current_wd = false,    -- save working directory of editor at startup; used to look for {build,run}file
   wincmd = '',                -- a window command to run prior to a build job
 }
 
@@ -86,14 +88,24 @@ local function stop(id)
   echo('None', 'No job to stop')
 end
 
-local function job_run(args, args_default, bang, buffer, buffer_name, file, force, id, kind)
+local function job_check_file(file, kind)
+  if fn.filereadable(file) == 0 then
+    echo('WarningMsg', fmt("%s file '%s' not found", kind:gsub("^%l", string.upper), file))
+    edit(file)
+    return false
+  else
+    return true
+  end
+end
+
+local function job_run(args, args_default, bang, buffer, buffer_name, file, force, id, current_wd, kind)
   if job_running(id) then
     echo('ErrorMsg', fmt('A %s job is already running (id: %d)', kind, id))
     return buffer, id
   end
-  if fn.filereadable(file) == 0 then
-    echo('WarningMsg', fmt("%s file '%s' not found", kind:gsub("^%l", string.upper), file))
-    edit(file)
+  if (current_wd ~= nil) and (not job_check_file(current_wd .."/".. file, kind)) then
+    return nil, nil
+  elseif (current_wd == nil) and (not job_check_file(file, kind)) then
     return nil, nil
   end
   -- Format interpreter string
@@ -119,8 +131,8 @@ local function job_run(args, args_default, bang, buffer, buffer_name, file, forc
   api.nvim_buf_set_option(buffer, 'filetype', 'buildme')
   api.nvim_buf_set_option(buffer, 'modified', false)
   -- Start build job
-  local command = fmt('%s%s%s%s', interpreter, file, force, args)
-  id = fn.termopen(command, {on_exit = job_exit})
+  local command = fmt("%s%s%s%s", interpreter, file, force, args)
+  id = fn.termopen(command, {cwd = current_wd, on_exit = job_exit})
   -- Rename buffer
   api.nvim_buf_set_name(buffer, buffer_name)
   -- Exit terminal mode
@@ -157,14 +169,14 @@ function M.build(bang, args)
   job_buffer_build, job_id_build = job_run(
     args, args_default_build, bang, job_buffer_build,
     'buildme://buildjob', options.buildfile, options.force,
-    job_id_build, 'build')
+    job_id_build, current_wd, 'build')
 end
 
 function M.run(bang, args)
   job_buffer_run, job_id_run = job_run(
     args, args_default_run, bang, job_buffer_run,
     'buildme://runjob', options.runfile, "",
-    job_id_run, 'run')
+    job_id_run, current_wd, 'run')
 end
 
 function M.stopbuild()
@@ -180,6 +192,9 @@ function M.setup(user_options)
   options = vim.tbl_extend('keep', user_options, options)
   if user_options then
     options = vim.tbl_extend('force', options, user_options)
+  end
+  if options.save_current_wd then
+    current_wd = fn.getcwd()
   end
 end
 
