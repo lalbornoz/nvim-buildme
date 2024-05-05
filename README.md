@@ -16,33 +16,37 @@ paq {'ojroques/nvim-buildme'}
 ```
 
 ## Usage
-The plugin checks for a build file and runs it in a terminal buffer. By default,
-this file is a shell script named `.buildme.sh` located in the current working
-directory.
+The plugin checks for a build/run file and runs it in a terminal buffer. By default,
+this file is a shell script named `.buildme.sh`/`.runme.sh`, resp., located in the current
+working directory.
 
 If you want your working directory to be automatically set to your project root,
 you should check [vim-rooter](https://github.com/airblade/vim-rooter).
 
-To run a build job:
+To run a build/run job:
 ```vim
 :BuildMe
+:RunMe
 ```
 Use `:BuildMe!` to pass the `force` option (by default `--force`,
 [configurable](#configuration)) to the final command.
 
-To stop a running build job:
+To stop a running build/run job:
 ```vim
 :BuildMeStop
+:RunMeStop
 ```
 
-To edit the build file:
+To edit the build/run file:
 ```vim
 :BuildMeEdit
+:RunMeEdit
 ```
 
-To jump to the buildme buffer:
+To jump to the buildme/runme buffer:
 ```vim
 :BuildMeJump
+:RunMeJump
 ```
 
 ## Configuration
@@ -51,6 +55,7 @@ options with their default settings:
 ```lua
 require('buildme').setup {
   buildfile = '.buildme.sh',  -- the build file to execute
+  runfile = '.runme.sh',      -- the run file to execute
   interpreter = 'bash',       -- the interpreter to use (bash, python, ...)
   force = '--force',          -- the option to pass when the bang is used
   wincmd = '',                -- a command to run prior to a build job (split, vsplit, ...)

@@ -7,8 +7,12 @@ if exists('g:loaded_buildme')
 endif
 
 command! -bang BuildMe lua require('buildme').build('<bang>' == '!')
-command! BuildMeEdit lua require('buildme').edit()
-command! BuildMeJump lua require('buildme').jump()
-command! BuildMeStop lua require('buildme').stop()
+command! RunMe lua require('buildme').run('')
+command! BuildMeEdit lua require('buildme').editbuild()
+command! RunMeEdit lua require('buildme').editrun()
+command! BuildMeJump lua require('buildme').jumpbuild()
+command! RunMeJump lua require('buildme').jumprun()
+command! BuildMeStop lua require('buildme').stopbuild()
+command! RunMeStop lua require('buildme').stoprun()
 
 let g:loaded_buildme = 1
