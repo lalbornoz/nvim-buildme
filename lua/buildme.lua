@@ -51,14 +51,18 @@ local function edit(file)
   cmd(fmt(autocmd, file))
 end
 
-local function editargs(args, prompt_kind)
-  vim.ui.input({
-    default=args,
-    prompt=fmt('%s default arguments: ', prompt_kind),
-    }, function(input)
-      args = input
-    end)
-  return args
+local function editargs(args, args_new, prompt_kind)
+  if args_new ~= "" then
+    return args_new
+  else
+    vim.ui.input({
+      default=args,
+      prompt=fmt('%s default arguments: ', prompt_kind),
+      }, function(input)
+        args = input
+      end)
+    return args
+  end
 end
 
 local function jump(buffer, kind)
@@ -145,31 +149,35 @@ function M.editbuild()
   edit(options.buildfile)
 end
 
-function M.editargsbuild()
-  args_default_build = editargs(args_default_build, "BuildMe")
+function M.editargsbuild(args_new)
+  args_default_build = editargs(args_default_build, args_new, "BuildMe")
 end
 
 function M.editrun()
   edit(options.runfile)
 end
 
-function M.editargsrun()
-  args_default_run = editargs(args_default_run, "RunMe")
+function M.editargsrun(args_new)
+  args_default_run = editargs(args_default_run, args_new, "RunMe")
 end
 
-function M.editcwd(kind)
-  vim.ui.input({
-    default=current_wd or "",
-    prompt=fmt('{Build,Run}Me working directory: '),
-    }, function(input)
-      if input == nil then
-        current_wd = current_wd
-      elseif #input == 0 then
-        current_wd = nil
-      else
-        current_wd = input
-      end
-    end)
+function M.editcwd(cwd_new)
+  if cwd_new ~= "" then
+    current_wd = cwd
+  else
+    vim.ui.input({
+      default=current_wd or "",
+      prompt=fmt('{Build,Run}Me working directory: '),
+      }, function(input)
+        if input == nil then
+          current_wd = current_wd
+        elseif #input == 0 then
+          current_wd = nil
+        else
+          current_wd = input
+        end
+      end)
+  end
 end
 
 function M.jumpbuild()

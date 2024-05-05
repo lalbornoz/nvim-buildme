@@ -32,15 +32,19 @@ To run a build/run job:
 :BuildMe -j4 putty
 :RunMe --file @session
 
-" In the absence of arguments, default arguments, if any, will be used. These may be edited:
+" In the absence of arguments, default arguments, if any, will be used. These may be edited or set:
 :BuildMeEditArgs
 :RunMeEditArgs
+:BuildMeEditArgs -j4 putty
+:RunMeEditArgs --file @session
 
-" An optional working directory specific to both of {Build,Run}Me may be set and edited; if
+" An optional working directory specific to both of {Build,Run}Me may be edited and set; if
 " the save_current_wd option below is configured as true, it will be set to the initial working
 " directory of the editor at startup. The two commands are aliases of each other for convenience.
 :BuildMeEditCwd
 :RunMeEditCwd
+:BuildMeEditCwd ../..
+:RunMeEditCwd ../..
 ```
 Use `:BuildMe!` to pass the `force` option (by default `--force`,
 [configurable](#configuration)) to the final command.
