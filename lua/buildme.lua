@@ -8,6 +8,8 @@ local fmt = string.format
 local nkeys = api.nvim_replace_termcodes('<C-\\><C-n>G', true, false, true)
 local job_buffer_build, job_id_build
 local job_buffer_run, job_id_run
+local args_default_build
+local args_default_run
 local M = {}
 
 -------------------- OPTIONS -------------------------------
@@ -47,6 +49,16 @@ local function edit(file)
   cmd(fmt(autocmd, file))
 end
 
+local function editargs(args, prompt_kind)
+  vim.ui.input({
+    default=args,
+    prompt=fmt('%s default arguments: ', prompt_kind),
+    }, function(input)
+      args = input
+    end)
+  return args
+end
+
 local function jump(buffer, kind)
   if not buffer_exists(buffer) then
     echo('WarningMsg', 'No ' .. kind .. ' buffer')
@@ -74,7 +86,7 @@ local function stop(id)
   echo('None', 'No job to stop')
 end
 
-local function job_run(args, bang, buffer, buffer_name, file, force, id, kind)
+local function job_run(args, args_default, bang, buffer, buffer_name, file, force, id, kind)
   if job_running(id) then
     echo('ErrorMsg', fmt('A %s job is already running (id: %d)', kind, id))
     return buffer, id
@@ -94,6 +106,8 @@ local function job_run(args, bang, buffer, buffer_name, file, force, id, kind)
   end
   if args ~= '' then
     args = fmt(' %s', args)
+  elseif (args_default ~= nil) and (args_default ~= '') then
+    args = fmt(' %s', args_default)
   end
   -- Create scratch buffer
   if not buffer_exists(buffer) then
@@ -119,8 +133,16 @@ function M.editbuild()
   edit(options.buildfile)
 end
 
+function M.editargsbuild()
+  args_default_build = editargs(args_default_build, "BuildMe")
+end
+
 function M.editrun()
   edit(options.runfile)
+end
+
+function M.editargsrun()
+  args_default_run = editargs(args_default_run, "RunMe")
 end
 
 function M.jumpbuild()
@@ -133,14 +155,16 @@ end
 
 function M.build(bang, args)
   job_buffer_build, job_id_build = job_run(
-    args, bang, job_buffer_build, 'buildme://buildjob',
-    options.buildfile, options.force, job_id_build, 'build')
+    args, args_default_build, bang, job_buffer_build,
+    'buildme://buildjob', options.buildfile, options.force,
+    job_id_build, 'build')
 end
 
 function M.run(bang, args)
   job_buffer_run, job_id_run = job_run(
-    args, bang, job_buffer_run, 'buildme://runjob',
-    options.runfile, "", job_id_run, 'run')
+    args, args_default_run, bang, job_buffer_run,
+    'buildme://runjob', options.runfile, "",
+    job_id_run, 'run')
 end
 
 function M.stopbuild()

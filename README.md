@@ -30,6 +30,9 @@ To run a build/run job:
 " Arguments may be optionally supplied:
 :BuildMe -j4 putty
 :RunMe --file @session
+" In the absence of arguments, default arguments, if any, will be used. These may be edited:
+:BuildMeEditArgs
+:RunMeEditArgs
 ```
 Use `:BuildMe!` to pass the `force` option (by default `--force`,
 [configurable](#configuration)) to the final command.
