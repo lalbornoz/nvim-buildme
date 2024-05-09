@@ -17,6 +17,8 @@ local M = {}
 local options = {
   buildfile = '.buildme.sh',    -- the build file to execute
   runfile = '.runme.sh',        -- the run file to execute
+  close_build_on_exit = false,  -- close build window on exit; cf. BuildMeToggleAutoClose
+  close_run_on_exit = false,    -- close run window on exit; cf. RunMeToggleAutoClose
   edit_on_nonexistent = true,   -- edit non-existent build/run file on build/run
   interpreter = 'bash',         -- the interpreter to use (bash, python, ...)
   force = '--force',            -- the option to pass when the bang is used
@@ -39,11 +41,14 @@ local function job_running(id)
   return id and fn.jobwait({id}, 0)[1] == -1
 end
 
-local function job_exit(on_exit)
+local function job_exit(close_on_exit, on_exit)
   return function(id, exit_code, _)
     local hlgroup = exit_code == 0 and 'None' or 'WarningMsg'
     local msg = fmt('Job %d has finished with exit code %d', id, exit_code)
     echo(hlgroup, msg)
+    if close_on_exit then
+      vim.cmd [[:q!]]
+    end
     if on_exit ~= nil then
       on_exit()
     end
@@ -110,7 +115,7 @@ local function job_check_file(file, kind)
   end
 end
 
-local function job_run(args, args_default, bang, buffer, buffer_name, file, force, id, current_wd, kind, on_exit)
+local function job_run(args, args_default, bang, buffer, buffer_name, close_on_exit, file, force, id, current_wd, kind, on_exit)
   if job_running(id) then
     echo('ErrorMsg', fmt('A %s job is already running (id: %d)', kind, id))
     return buffer, id
@@ -144,7 +149,7 @@ local function job_run(args, args_default, bang, buffer, buffer_name, file, forc
   api.nvim_buf_set_option(buffer, 'modified', false)
   -- Start build job
   local command = fmt("%s%s%s%s", interpreter, fn.shellescape(file), force, args)
-  id = fn.termopen(command, {cwd = current_wd, on_exit = job_exit(on_exit)})
+  id = fn.termopen(command, {cwd = current_wd, on_exit = job_exit(close_on_exit, on_exit)})
   -- Rename buffer
   api.nvim_buf_set_name(buffer, buffer_name)
   -- Exit terminal mode
@@ -199,15 +204,17 @@ end
 function M.build(bang, args, on_exit)
   job_buffer_build, job_id_build = job_run(
     args, args_default_build, bang, job_buffer_build,
-    'buildme://buildjob', options.buildfile, options.force,
-    job_id_build, current_wd, 'build', on_exit)
+    'buildme://buildjob', options.close_build_on_exit,
+    options.buildfile, options.force, job_id_build,
+    current_wd, 'build', on_exit)
 end
 
 function M.run(bang, args, on_exit)
   job_buffer_run, job_id_run = job_run(
     args, args_default_run, bang, job_buffer_run,
-    'buildme://runjob', options.runfile, "",
-    job_id_run, current_wd, 'run', on_exit)
+    'buildme://runjob', options.close_run_on_exit,
+    options.runfile, "", job_id_run, current_wd,
+    'run', on_exit)
 end
 
 function M.buildrun(bang, args)
@@ -222,6 +229,14 @@ end
 
 function M.stoprun()
   stop(job_id_run)
+end
+
+function M.toggleautoclosebuild()
+  options.close_build_on_exit = not options.close_build_on_exit
+end
+
+function M.toggleautocloserun()
+  options.close_run_on_exit = not options.close_run_on_exit
 end
 
 -------------------- SETUP ---------------------------------
