@@ -39,10 +39,15 @@ local function job_running(id)
   return id and fn.jobwait({id}, 0)[1] == -1
 end
 
-local function job_exit(id, exit_code, _)
-  local hlgroup = exit_code == 0 and 'None' or 'WarningMsg'
-  local msg = fmt('Job %d has finished with exit code %d', id, exit_code)
-  echo(hlgroup, msg)
+local function job_exit(on_exit)
+  return function(id, exit_code, _)
+    local hlgroup = exit_code == 0 and 'None' or 'WarningMsg'
+    local msg = fmt('Job %d has finished with exit code %d', id, exit_code)
+    echo(hlgroup, msg)
+    if on_exit ~= nil then
+      on_exit()
+    end
+  end
 end
 
 local function edit(file)
@@ -105,7 +110,7 @@ local function job_check_file(file, kind)
   end
 end
 
-local function job_run(args, args_default, bang, buffer, buffer_name, file, force, id, current_wd, kind)
+local function job_run(args, args_default, bang, buffer, buffer_name, file, force, id, current_wd, kind, on_exit)
   if job_running(id) then
     echo('ErrorMsg', fmt('A %s job is already running (id: %d)', kind, id))
     return buffer, id
@@ -139,7 +144,7 @@ local function job_run(args, args_default, bang, buffer, buffer_name, file, forc
   api.nvim_buf_set_option(buffer, 'modified', false)
   -- Start build job
   local command = fmt("%s%s%s%s", interpreter, fn.shellescape(file), force, args)
-  id = fn.termopen(command, {cwd = current_wd, on_exit = job_exit})
+  id = fn.termopen(command, {cwd = current_wd, on_exit = job_exit(on_exit)})
   -- Rename buffer
   api.nvim_buf_set_name(buffer, buffer_name)
   -- Exit terminal mode
@@ -191,18 +196,24 @@ function M.jumprun()
   jump(job_buffer_run, 'runme')
 end
 
-function M.build(bang, args)
+function M.build(bang, args, on_exit)
   job_buffer_build, job_id_build = job_run(
     args, args_default_build, bang, job_buffer_build,
     'buildme://buildjob', options.buildfile, options.force,
-    job_id_build, current_wd, 'build')
+    job_id_build, current_wd, 'build', on_exit)
 end
 
-function M.run(bang, args)
+function M.run(bang, args, on_exit)
   job_buffer_run, job_id_run = job_run(
     args, args_default_run, bang, job_buffer_run,
     'buildme://runjob', options.runfile, "",
-    job_id_run, current_wd, 'run')
+    job_id_run, current_wd, 'run', on_exit)
+end
+
+function M.buildrun(bang, args)
+  M.build(bang, args, function()
+    M.run(bang, args)
+  end)
 end
 
 function M.stopbuild()

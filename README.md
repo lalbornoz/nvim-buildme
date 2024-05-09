@@ -27,10 +27,12 @@ To run a build/run job:
 ```vim
 :BuildMe
 :RunMe
+:BuildRunMe
 
-" Arguments may be optionally supplied:
+" Arguments may be optionally supplied, except to BuildRunMe:
 :BuildMe -j4 putty
 :RunMe --file @session
+:BuildRunMe
 
 " In the absence of arguments, default arguments, if any, will be used. These may be edited or set:
 :BuildMeEditArgs
