@@ -8,6 +8,7 @@ local fmt = string.format
 local nkeys = api.nvim_replace_termcodes('<C-\\><C-n>G', true, false, true)
 local job_buffer_build, job_id_build
 local job_buffer_run, job_id_run
+local job_qflist = {build=nil, run=nil}
 local args_default_build
 local args_default_run
 local current_wd
@@ -37,15 +38,42 @@ local function buffer_exists(buffer)
   return buffer and fn.buflisted(buffer) == 1
 end
 
+local function buffer_activate_qfitem(buffer, qflist_key)
+  return function()
+    local qflist = job_qflist[qflist_key]
+    if qflist ~= nil then
+      local pos = api.nvim_win_get_cursor(0)
+      local qf_item = qflist[pos[1]]
+      if (qf_item ~= nil) and (qf_item.valid == 1) then
+        local job_window = fn.bufwinnr(buffer)
+        if job_window ~= -1 then
+          cmd(fmt('wincmd p'))
+          cmd(fmt('e %s', qf_item.module))
+          api.nvim_win_set_cursor(0, {qf_item.lnum, qf_item.col})
+        end
+      end
+    end
+  end
+end
+
 local function job_running(id)
   return id and fn.jobwait({id}, 0)[1] == -1
 end
 
-local function job_exit(close_on_exit, on_exit)
+local function job_exit(buffer, close_on_exit, kind, on_exit)
   return function(id, exit_code, _)
     local hlgroup = exit_code == 0 and 'None' or 'WarningMsg'
     local msg = fmt('Job %d has finished with exit code %d', id, exit_code)
     echo(hlgroup, msg)
+    local lines = api.nvim_buf_get_lines(buffer, 0, -1, false)
+    local qflist = fn.getqflist({lines=lines})
+    if #qflist.items then
+      for idx, _ in ipairs(qflist.items) do
+        qflist.items[idx].bufnr = buffer
+      end
+      fn.setqflist(qflist.items, "r")
+      job_qflist[kind] = qflist.items
+    end
     if close_on_exit then
       vim.cmd [[:q!]]
     end
@@ -139,9 +167,15 @@ local function job_run(args, args_default, bang, buffer, buffer_name, close_on_e
     args = fmt(' %s', args_default)
   end
   -- Create scratch buffer
-  if not buffer_exists(buffer) then
+  if (buffer == nil) or (not buffer_exists(buffer)) then
     buffer = api.nvim_create_buf(true, true)
+  else
+    vim.keymap.del({'n', 'i'}, '<CR>', {buffer=buffer})
   end
+  vim.keymap.set(
+    {'n', 'i'}, '<CR>',
+    buffer_activate_qfitem(buffer, kind),
+    {buffer=buffer, noremap=true})
   -- Jump to buffer
   jump(buffer, kind)
   -- Set buffer options
@@ -149,7 +183,7 @@ local function job_run(args, args_default, bang, buffer, buffer_name, close_on_e
   api.nvim_buf_set_option(buffer, 'modified', false)
   -- Start build job
   local command = fmt("%s%s%s%s", interpreter, fn.shellescape(file), force, args)
-  id = fn.termopen(command, {cwd = current_wd, on_exit = job_exit(close_on_exit, on_exit)})
+  id = fn.termopen(command, {cwd = current_wd, on_exit = job_exit(buffer, close_on_exit, kind, on_exit)})
   -- Rename buffer
   api.nvim_buf_set_name(buffer, buffer_name)
   -- Exit terminal mode
