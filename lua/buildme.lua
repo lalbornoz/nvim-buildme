@@ -56,6 +56,67 @@ local function buffer_activate_qfitem(buffer, qflist_key)
   end
 end
 
+local function buffer_next_qfitem(buffer, qflist_key, open)
+  return function()
+    local qflist = job_qflist[qflist_key]
+    if qflist ~= nil then
+      local pos = api.nvim_win_get_cursor(0)
+      for idx=pos[1]+1,#qflist do
+        if qflist[idx].valid == 1 then
+          api.nvim_win_set_cursor(0, {idx, 0})
+	  if open then
+            local job_window = fn.bufwinnr(buffer)
+            if job_window ~= -1 then
+              cmd(fmt('wincmd p'))
+              cmd(fmt('e %s', qflist[idx].module))
+              api.nvim_win_set_cursor(0, {qflist[idx].lnum, qflist[idx].col})
+            end
+	  end
+          break
+	end
+      end
+    end
+  end
+end
+
+local function buffer_prev_qfitem(buffer, qflist_key, open)
+  return function()
+    local qflist = job_qflist[qflist_key]
+    if qflist ~= nil then
+      local pos = api.nvim_win_get_cursor(0)
+      for idx=pos[1]-1,1,-1 do
+        if qflist[idx].valid == 1 then
+          api.nvim_win_set_cursor(0, {idx, 0})
+	  if open then
+            local job_window = fn.bufwinnr(buffer)
+            if job_window ~= -1 then
+              cmd(fmt('wincmd p'))
+              cmd(fmt('e %s', qflist[idx].module))
+              api.nvim_win_set_cursor(0, {qflist[idx].lnum, qflist[idx].col})
+            end
+          end
+          break
+	end
+      end
+    end
+  end
+end
+
+local function buffer_first_qfitem(buffer, qflist_key)
+  return function()
+    local qflist = job_qflist[qflist_key]
+    if qflist ~= nil then
+      local pos = api.nvim_win_get_cursor(0)
+      for idx=1,#qflist do
+        if qflist[idx].valid == 1 then
+          api.nvim_win_set_cursor(0, {idx, 0})
+          break
+	end
+      end
+    end
+  end
+end
+
 local function job_running(id)
   return id and fn.jobwait({id}, 0)[1] == -1
 end
@@ -73,6 +134,7 @@ local function job_exit(buffer, close_on_exit, kind, on_exit)
       end
       fn.setqflist(qflist.items, "r")
       job_qflist[kind] = qflist.items
+      buffer_first_qfitem(buffer, kind)()
     end
     if (close_on_exit == "always")
     or ((close_on_exit == "on_error") and (exit_code > 0))
@@ -174,11 +236,32 @@ local function job_run(args, args_default, bang, buffer, buffer_name, close_on_e
     buffer = api.nvim_create_buf(true, true)
   else
     vim.keymap.del({'n', 'i'}, '<CR>', {buffer=buffer})
+    vim.keymap.del({'n', 'i'}, '<C-PageDown>', {buffer=buffer})
+    vim.keymap.del({'n', 'i'}, '<C-PageUp>', {buffer=buffer})
+    vim.keymap.del({'n', 'i'}, '<C-S-PageDown>', {buffer=buffer})
+    vim.keymap.del({'n', 'i'}, '<C-S-PageUp>', {buffer=buffer})
   end
   vim.keymap.set(
     {'n', 'i'}, '<CR>',
     buffer_activate_qfitem(buffer, kind),
     {buffer=buffer, noremap=true})
+  vim.keymap.set(
+    {'n', 'i'}, '<C-PageDown>',
+    buffer_next_qfitem(buffer, kind, false),
+    {buffer=buffer, noremap=true})
+  vim.keymap.set(
+    {'n', 'i'}, '<C-PageUp>',
+    buffer_prev_qfitem(buffer, kind, false),
+    {buffer=buffer, noremap=true})
+  vim.keymap.set(
+    {'n', 'i'}, '<C-S-PageDown>',
+    buffer_next_qfitem(buffer, kind, true),
+    {buffer=buffer, noremap=true})
+  vim.keymap.set(
+    {'n', 'i'}, '<C-S-PageUp>',
+    buffer_prev_qfitem(buffer, kind, true),
+    {buffer=buffer, noremap=true})
+
   -- Jump to buffer
   jump(buffer, kind)
   -- Set buffer options
