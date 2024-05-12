@@ -19,7 +19,7 @@ command! BuildMeJump lua require('buildme').jumpbuild()
 command! RunMeJump lua require('buildme').jumprun()
 command! BuildMeStop lua require('buildme').stopbuild()
 command! RunMeStop lua require('buildme').stoprun()
-command! BuildMeToggleAutoClose lua require('buildme').toggleautoclosebuild()
-command! RunMeToggleAutoClose lua require('buildme').toggleautocloserun()
+command! -nargs=1 BuildMeSetAutoClose lua require('buildme').setautoclosebuild('<args>')
+command! -nargs=1 RunMeSetAutoClose lua require('buildme').setautocloserun('<args>')
 
 let g:loaded_buildme = 1

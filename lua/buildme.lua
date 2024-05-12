@@ -16,15 +16,15 @@ local M = {}
 
 -------------------- OPTIONS -------------------------------
 local options = {
-  buildfile = '.buildme.sh',    -- the build file to execute
-  runfile = '.runme.sh',        -- the run file to execute
-  close_build_on_exit = false,  -- close build window on exit; cf. BuildMeToggleAutoClose
-  close_run_on_exit = false,    -- close run window on exit; cf. RunMeToggleAutoClose
-  edit_on_nonexistent = true,   -- edit non-existent build/run file on build/run
-  interpreter = 'bash',         -- the interpreter to use (bash, python, ...)
-  force = '--force',            -- the option to pass when the bang is used
-  save_current_wd = false,      -- save working directory of editor at startup; used to look for {build,run}file
-  wincmd = '',                  -- a window command to run prior to a build job
+  buildfile = '.buildme.sh',       -- the build file to execute
+  runfile = '.runme.sh',           -- the run file to execute
+  close_build_on_exit = 'always',  -- close build window on exit: never, on_error, on_success, always
+  close_run_on_exit = 'always',    -- close run window on exit: never, on_error, on_success, always
+  edit_on_nonexistent = true,      -- edit non-existent build/run file on build/run
+  interpreter = 'bash',            -- the interpreter to use (bash, python, ...)
+  force = '--force',               -- the option to pass when the bang is used
+  save_current_wd = false,         -- save working directory of editor at startup; used to look for {build,run}file
+  wincmd = '',                     -- a window command to run prior to a build job
 }
 
 -------------------- PRIVATE -------------------------------
@@ -74,7 +74,10 @@ local function job_exit(buffer, close_on_exit, kind, on_exit)
       fn.setqflist(qflist.items, "r")
       job_qflist[kind] = qflist.items
     end
-    if close_on_exit then
+    if (close_on_exit == "always")
+    or ((close_on_exit == "on_error") and (exit_code > 0))
+    or ((close_on_exit == "on_success") and (exit_code == 0))
+    then
       vim.cmd [[:q!]]
     end
     if on_exit ~= nil then
@@ -265,12 +268,12 @@ function M.stoprun()
   stop(job_id_run)
 end
 
-function M.toggleautoclosebuild()
-  options.close_build_on_exit = not options.close_build_on_exit
+function M.setautoclosebuild(autoclose_new)
+  options.close_build_on_exit = autoclose_new
 end
 
-function M.toggleautocloserun()
-  options.close_run_on_exit = not options.close_run_on_exit
+function M.setautocloserun(autoclose_new)
+  options.close_run_on_exit = autoclose_new
 end
 
 -------------------- SETUP ---------------------------------
