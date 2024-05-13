@@ -313,6 +313,18 @@ function M.editcwd(cwd_new)
   end
 end
 
+function M.getargsbuild()
+  return args_default_build
+end
+
+function M.getargsrun()
+  return args_default_run
+end
+
+function M.getcwd()
+  return current_wd
+end
+
 function M.jumpbuild()
   jump(job_buffer_build, 'buildme')
 end
