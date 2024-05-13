@@ -6,8 +6,8 @@
 local api, cmd, fn, vim = vim.api, vim.cmd, vim.fn, vim
 local fmt = string.format
 local nkeys = api.nvim_replace_termcodes('<C-\\><C-n>G', true, false, true)
-local job_buffer_build, job_id_build
-local job_buffer_run, job_id_run
+local job_buffer_build, job_id_build, job_window_build
+local job_buffer_run, job_id_run, job_window_run
 local job_qflist = {build=nil, run=nil}
 local args_default_build
 local args_default_run
@@ -121,7 +121,7 @@ local function job_running(id)
   return id and fn.jobwait({id}, 0)[1] == -1
 end
 
-local function job_exit(buffer, close_on_exit, kind, on_exit)
+local function job_exit(buffer, close_on_exit, kind, on_exit, window)
   return function(id, exit_code, _)
     local hlgroup = exit_code == 0 and 'None' or 'WarningMsg'
     local msg = fmt('Job %d has finished with exit code %d', id, exit_code)
@@ -140,7 +140,7 @@ local function job_exit(buffer, close_on_exit, kind, on_exit)
     or ((close_on_exit == "on_error") and (exit_code > 0))
     or ((close_on_exit == "on_success") and (exit_code == 0))
     then
-      vim.cmd [[:q!]]
+      api.nvim_win_close(window, true)
     end
     if on_exit ~= nil then
       on_exit()
@@ -264,17 +264,18 @@ local function job_run(args, args_default, bang, buffer, buffer_name, close_on_e
 
   -- Jump to buffer
   jump(buffer, kind)
+  local window = api.nvim_get_current_win()
   -- Set buffer options
   api.nvim_buf_set_option(buffer, 'filetype', 'buildme')
   api.nvim_buf_set_option(buffer, 'modified', false)
   -- Start build job
   local command = fmt("%s%s%s%s", interpreter, fn.shellescape(file), force, args)
-  id = fn.termopen(command, {cwd = current_wd, on_exit = job_exit(buffer, close_on_exit, kind, on_exit)})
+  id = fn.termopen(command, {cwd = current_wd, on_exit = job_exit(buffer, close_on_exit, kind, on_exit, window)})
   -- Rename buffer
   api.nvim_buf_set_name(buffer, buffer_name)
   -- Exit terminal mode
   api.nvim_feedkeys(nkeys, 'n', false)
-  return buffer, id
+  return buffer, id, window
 end
 
 -------------------- PUBLIC --------------------------------
@@ -334,19 +335,21 @@ function M.jumprun()
 end
 
 function M.build(bang, args, on_exit)
-  job_buffer_build, job_id_build = job_run(
-    args, args_default_build, bang, job_buffer_build,
-    'buildme://buildjob', options.close_build_on_exit,
-    options.buildfile, options.force, job_id_build,
-    current_wd, 'build', on_exit)
+  job_buffer_build, job_id_build, job_window_build =
+    job_run(
+      args, args_default_build, bang, job_buffer_build,
+      'buildme://buildjob', options.close_build_on_exit,
+      options.buildfile, options.force, job_id_build,
+      current_wd, 'build', on_exit)
 end
 
 function M.run(bang, args, on_exit)
-  job_buffer_run, job_id_run = job_run(
-    args, args_default_run, bang, job_buffer_run,
-    'buildme://runjob', options.close_run_on_exit,
-    options.runfile, "", job_id_run, current_wd,
-    'run', on_exit)
+  job_buffer_run, job_id_run, job_window_run =
+    job_run(
+      args, args_default_run, bang, job_buffer_run,
+      'buildme://runjob', options.close_run_on_exit,
+      options.runfile, "", job_id_run, current_wd,
+      'run', on_exit)
 end
 
 function M.buildrun(bang, args)
