@@ -1,18 +1,33 @@
-# nvim-buildme
+# roarie-buildme
 
 A Neovim plugin to build or run a project using the built-in terminal. It is
-very small (~100 SLOC) and written entirely in Lua. See [example](#example)
-below for a demo.
+reasonably small (~600 SLOC) and written entirely in Lua. See [example](#example)
+below for a demo. This is a fork of the [roarie-buildme](https://github.com/lalbornoz/roarie-buildme)
+plugin implementing the following additional features:
+
+- Add argument completion to {Build,Run}MeSetAutoClose
+- Cycle through quickfix items w/ <C-{,S-}Page{Down,Up}>
+- Optionally auto-close {build,run} window based on exit status
+- Parse quickfix items on exit & jump to w/ <CR>
+- Optionally auto-close {build,run} window
+- Implements :BuildRunMe
+- Adds edit_on_nonexistent option (true by default)
+- Allow editing optional wd
+- Apply fn.shellescape() to {build,run}file
+- Optionally save wd of editor at startup
+- Implements per-session default arguments to {Build,Run}Me
+- Allow optional arguments to {Build,Run}Me
+- Implements RunMe{,Stop,Edit,Jump}
 
 ## Installation
 With [packer.nvim](https://github.com/wbthomason/packer.nvim):
 ```lua
-use {'ojroques/nvim-buildme'}
+use {'lalbornoz/roarie-buildme'}
 ```
 
 With [paq-nvim](https://github.com/savq/paq-nvim):
 ```lua
-paq {'ojroques/nvim-buildme'}
+paq {'lalbornoz/roarie-buildme'}
 ```
 
 ## Usage
@@ -73,16 +88,16 @@ To jump to the buildme/runme buffer:
 You can pass options to the provided `setup()` function. Here are all available
 options with their default settings:
 ```lua
-require('buildme').setup {
-  buildfile = '.buildme.sh',       -- the build file to execute
-  runfile = '.runme.sh',           -- the run file to execute
-  close_build_on_exit = 'always',  -- close build window on exit: never, on_error, on_success, always
-  close_run_on_exit = 'always',    -- close run window on exit: never, on_error, on_success, always
-  edit_on_nonexistent = true,      -- edit non-existent build/run file on build/run
-  interpreter = 'sh',              -- the interpreter to use (sh, bash, python, ...)
-  force = '--force',               -- the option to pass when the bang is used
-  save_current_wd = false,         -- save working directory of editor at startup; used to look for {build,run}file
-  wincmd = '',                     -- a command to run prior to a build job (split, vsplit, ...)
+require("buildme").setup {
+	buildfile = ".buildme.sh",		-- the build file to execute
+	runfile = ".runme.sh",			-- the run file to execute
+	close_build_on_exit = "always", -- close build window on exit: never, on_error, on_success, always
+	close_run_on_exit = "always",	-- close run window on exit: never, on_error, on_success, always
+	edit_on_nonexistent = true,		-- edit non-existent build/run file on build/run
+	interpreter = "sh",				-- the interpreter to use (sh, bash, python, ...)
+	force = "--force",				-- the option to pass when the bang is used
+	save_current_wd = false,		-- save working directory of editor at startup; used to look for {build,run}file
+	wincmd = "",					-- a command to run prior to a build job (split, vsplit, ...)
 }
 ```
 
@@ -98,7 +113,7 @@ running `make`, or if you want to run a Python script immediately after editing
 it for instance.
 
 Here's a full example of a buildme file for CMake:
-[buildme.sh](https://gist.github.com/ojroques/9824c85cfd1eabafb3c0be5530c35b5a)
+[buildme.sh](https://gist.github.com/lalbornoz/9824c85cfd1eabafb3c0be5530c35b5a)
 
 ## License
 [LICENSE](./LICENSE)
