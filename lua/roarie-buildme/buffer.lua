@@ -30,31 +30,32 @@ local maps_default = {
 }
 -- }}}
 
--- {{{ local function setup_maps(buffer, kind, qflist_fn)
-local function setup_maps(buffer, kind, qflist_fn)
-	for lhs, rhs in pairs(M.maps or {}) do
+-- {{{ local function setup_maps(buffer, kind, maps, qflist_fn)
+local function setup_maps(buffer, kind, maps, qflist_fn)
+	for lhs, rhs in pairs(maps or {}) do
 		vim.keymap.del({"n", "i"}, lhs, {buffer=buffer})
 	end
-	M.maps = {}
+	maps = {}
 
 	for lhs, rhs in pairs(maps_default) do
 		vim.keymap.set(
 			{"n", "i"}, lhs, rhs(M, buffer, kind, qflist_fn),
 			{buffer=buffer, noremap=true})
-		M.maps[lhs] = rhs
+		maps[lhs] = rhs
 	end
+	return maps
 end
 -- }}}
 
--- {{{ M.create = function(buffer, kind, qflist_fn)
-M.create = function(buffer, kind, qflist_fn)
+-- {{{ M.create = function(buffer, kind, maps, qflist_fn)
+M.create = function(buffer, kind, maps, qflist_fn)
 	if (buffer == nil) or (not M.exists(buffer)) then
 		buffer = api.nvim_create_buf(true, true)
 		api.nvim_buf_set_option(buffer, "filetype", "buildme")
 	end
 	api.nvim_buf_set_option(buffer, "modified", false)
-	setup_maps(buffer, kind, qflist_fn)
-	return buffer
+	setup_maps(buffer, kind, maps, qflist_fn)
+	return buffer, maps
 end
 -- }}}
 -- {{{ M.exists = function(buffer)

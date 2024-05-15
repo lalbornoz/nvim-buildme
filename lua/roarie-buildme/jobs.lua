@@ -14,8 +14,8 @@ local M = {}
 local nkeys = api.nvim_replace_termcodes('<C-\\><C-n>G', true, false, true)
 
 M.jobs = {
-	build = {args_default=nil, buffer=nil, id=nil, window=nil, qflist=nil},
-	run = {args_default=nil, buffer=nil, id=nil, window=nil, qflist=nil},
+	build = {args_default=nil, buffer=nil, id=nil, maps=nil, window=nil, qflist=nil},
+	run = {args_default=nil, buffer=nil, id=nil, maps=nil, window=nil, qflist=nil},
 }
 
 -- {{{ local function check_file(edit_on_nonexistent, file, kind)
@@ -137,8 +137,8 @@ M.run = function(
 	-- exit terminal mode, rename buffer
 	--
 
-	buffer = utils_buffer.create(
-		buffer, kind,
+	buffer, M.jobs[kind].maps = utils_buffer.create(
+		buffer, kind, M.jobs[kind].maps,
 		function() return M.jobs[kind].qflist end)
 	utils_buffer.jump(buffer, kind, wincmd)
 	local window = api.nvim_get_current_win()
