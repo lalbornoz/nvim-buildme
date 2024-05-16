@@ -77,7 +77,7 @@ local function job_on_exit(buffer, close_on_exit, kind, on_exit, window)
 		end
 
 		if on_exit ~= nil then
-			on_exit()
+			on_exit(id, exit_code)
 		end
 	end
 end

@@ -115,8 +115,10 @@ end
 -- }}}
 -- {{{ function M.buildrun(bang, args)
 function M.buildrun(bang, args)
-	M.build(bang, args, function()
-		M.run(bang, args)
+	M.build(bang, args, function(id, exit_code)
+		if exit_code == 0 then
+			M.run(bang, args)
+		end
 	end)
 end
 -- }}}
