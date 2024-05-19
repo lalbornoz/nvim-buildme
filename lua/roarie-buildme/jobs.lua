@@ -73,8 +73,12 @@ local function job_on_exit(buffer, close_on_exit, kind, on_exit, window)
 		or ((close_on_exit == "on_error") and (exit_code > 0))
 		or ((close_on_exit == "on_success") and (exit_code == 0))
 		then
-			api.nvim_win_close(window, true)
-			cmd(fmt("wincmd p"))
+			local rc, error = pcall(api.nvim_win_close, window, true)
+			if rc then
+				cmd(fmt("wincmd p"))
+			else
+				utils.echo("ErrorMsg", fmt("%s", error))
+			end
 		end
 
 		if on_exit ~= nil then
