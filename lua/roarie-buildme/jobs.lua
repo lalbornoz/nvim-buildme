@@ -74,6 +74,7 @@ local function job_on_exit(buffer, close_on_exit, kind, on_exit, window)
 		or ((close_on_exit == "on_success") and (exit_code == 0))
 		then
 			api.nvim_win_close(window, true)
+			cmd(fmt("wincmd p"))
 		end
 
 		if on_exit ~= nil then
