@@ -8,6 +8,7 @@ local fmt = string.format
 
 local jobs = require("roarie-buildme.jobs")
 local utils = require("roarie-buildme.utils")
+local utils_buffer = require("roarie-buildme.buffer")
 
 local M = {}
 
@@ -84,12 +85,12 @@ end
 
 -- {{{ function M.jumpbuild()
 function M.jumpbuild()
-	jobs.jump("build", options.wincmd)
+	utils_buffer.jump(jobs.jobs.build.buffer, "build", options.wincmd)
 end
 -- }}}
 -- {{{ function M.jumprun()
 function M.jumprun()
-	jobs.jump("run", options.wincmd)
+	utils_buffer.jump(jobs.jobs.run.buffer, "run", options.wincmd)
 end
 -- }}}
 
